@@ -1,28 +1,26 @@
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+from torchvision import datasets
 
 def get_dataloader(batch_size):
 
     # transform
     transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5),
-                             (0.5, 0.5, 0.5))
-    ])
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5),
+                         (0.5, 0.5, 0.5))
+])
 
     # dataset
-    train_dataset = torchvision.datasets.CIFAR10(
-        root='./data',
-        train=True,
-        download=True,
+    train_dataset = datasets.ImageFolder(
+        root='./kaggle/train',
         transform=transform
     )
 
-    val_dataset = torchvision.datasets.CIFAR10(
-        root='./data',
-        train=False,
-        download=True,
+    val_dataset = datasets.ImageFolder(
+        root='./kaggle/val',
         transform=transform
     )
 
@@ -35,7 +33,7 @@ def get_dataloader(batch_size):
 
     val_loader = DataLoader(
         val_dataset,
-        shuffle=False,  # ⚠️ jangan shuffle validation
+        shuffle=False,  
         batch_size=batch_size
     )
 
