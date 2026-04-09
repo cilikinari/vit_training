@@ -7,18 +7,18 @@ from dataset import get_dataloader
 from model import VisionTransformer
 
 config = {
-	"batch_size": 64,
-	"num_classes": 10,
+	"batch_size": 32,
+	"num_classes": 3,
 	"num_channels": 3,
-	"img_size": 32,
-	"patch_size": 8,
-	"patch_num": (32 // 8) * (32 // 8),
-	"attention_heads": 1,
-	"embed_dim": 64,
-	"transformer_blocks": 1,
-	"mlp_nodes": 16,
-	"learning_rate": 0.01,
-	"epochs": 5,
+	"img_size": 224,
+	"patch_size": 16,
+	"patch_num": (224 // 16) * (224 // 16),
+	"attention_heads": 4,
+	"embed_dim": 128,
+	"transformer_blocks": 4,
+	"mlp_nodes": 128,
+	"learning_rate": 0.0001,
+	"epochs": 10,
 }
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
