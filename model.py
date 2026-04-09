@@ -74,8 +74,6 @@ class VisionTransformer(nn.Module):
 
         x = torch.cat((cls_tokens, x), dim=1)
         x = x + self.position_embedding
-
-        # 🔥 FIX DI SINI
         for block in self.transformer_blocks:
             x = block(x)
 
