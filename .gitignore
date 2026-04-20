@@ -1,24 +1,36 @@
+# ======================
 # Python cache
+# ======================
 __pycache__/
 *.pyc
 *.pyo
 
-# Dataset files
-data/cifar-10-batches-py/
-data/cifar-10-python.tar.gz
+# ======================
+# Dataset (IMPORTANT)
+# ======================
+kaggle/
+data/
+dataset/
+*.jpg
+*.jpeg
+*.png
 
-# Kaggle raw data
-kaggle/raw/
-kaggle/train/
-kaggle/val/
-kaggle/dataset-paddy/
-kaggle/train/
-kaggle/val/
+# ======================
+# Model checkpoints
+# ======================
 *.pt
 *.pth
-__pycache__/
+*.ckpt
 
-
-# General
-*.tar.gz
+# ======================
+# Archives
+# ======================
 *.zip
+*.tar
+*.tar.gz
+
+# ======================
+# IDE / system
+# ======================
+.vscode/
+.DS_Store
