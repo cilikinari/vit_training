@@ -1,83 +1,65 @@
 import torch
 import torch.nn as nn
 
-
-#Patch embedding class
-class PatchEmbedding(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.patch_embed = nn.Conv2d(
-            config["num_channels"],
-            config["embed_dim"],
-            kernel_size=config["patch_size"],
-            stride=config["patch_size"]
-        )
-
-    def forward(self, x):  # ✅ harus sejajar dengan __init__
-        x = self.patch_embed(x)
-        x = x.flatten(2)
-        x = x.transpose(1, 2)
-        return x
-        
-#Transformer block class
-class TransformerBlock(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.layer_norm1 = nn.LayerNorm(config["embed_dim"])
-        self.multi_head_attention = nn.MultiheadAttention(config["embed_dim"], config["attention_heads"], batch_first=True)
-        self.layer_norm2 = nn.LayerNorm(config["embed_dim"])
-        self.mlp = nn.Sequential(
-            nn.Linear(config["embed_dim"], config["mlp_nodes"]),
-            nn.GELU(),
-            nn.Linear(config["mlp_nodes"], config["embed_dim"])
-        )
-
-    def forward(self, x):
-        residual1 = x
-        x = self.layer_norm1(x)
-        x = self.multi_head_attention(x, x, x)[0] + residual1
-        residual2 = x
-        x = self.layer_norm2(x)
-        x = self.mlp(x) + residual2
-        return x
-    
-#MLP class
-class MLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.layernorm3 = nn.LayerNorm(config["embed_dim"])
-        self.mlphead = nn.Sequential(
-            nn.LayerNorm(config["embed_dim"]),
-            nn.Linear(config["embed_dim"], config["num_classes"])
-        )
-
-    def forward(self, x):
-        x = self.layernorm3(x)
-        x = self.mlphead(x)
-        return x
-    
-#Vision Transformer class
 class VisionTransformer(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.patch_embedding = PatchEmbedding(config)
-        self.cls_token = nn.Parameter(torch.randn(1, 1, config["embed_dim"]))
-        self.position_embedding = nn.Parameter(torch.randn(1, config["patch_num"] + 1, config["embed_dim"]))
-        self.transformer_blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config["transformer_blocks"])])
-        self.mlp_head = MLP(config)
+
+        self.img_size = config["img_size"]
+        self.patch_size = config["patch_size"]
+        self.embed_dim = config["embed_dim"]
+
+        # =========================
+        # HITUNG PATCH NUM DI SINI
+        # =========================
+        patch_num = (self.img_size // self.patch_size) ** 2
+
+        # Patch embedding
+        self.patch_embed = nn.Conv2d(
+            in_channels=config["num_channels"],
+            out_channels=self.embed_dim,
+            kernel_size=self.patch_size,
+            stride=self.patch_size
+        )
+
+        # CLS token
+        self.cls_token = nn.Parameter(torch.randn(1, 1, self.embed_dim))
+
+        # Positional embedding
+        self.position_embedding = nn.Parameter(
+            torch.randn(1, patch_num + 1, self.embed_dim)
+        )
+
+        # Transformer encoder (simple version)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=self.embed_dim,
+            nhead=config["attention_heads"],
+            dim_feedforward=config["mlp_nodes"],
+            batch_first=True
+        )
+
+        self.transformer = nn.TransformerEncoder(
+            encoder_layer,
+            num_layers=config["transformer_blocks"]
+        )
+
+        # classifier
+        self.mlp_head = nn.Linear(self.embed_dim, config["num_classes"])
 
     def forward(self, x):
-        x = self.patch_embedding(x)
+        B = x.shape[0]
 
-        B = x.size(0)
-        cls_tokens = self.cls_token.expand(B, -1, -1)
+        x = self.patch_embed(x)  # (B, E, H', W')
+        x = x.flatten(2).transpose(1, 2)  # (B, N, E)
 
-        x = torch.cat((cls_tokens, x), dim=1)
+        cls_token = self.cls_token.expand(B, -1, -1)
+        x = torch.cat((cls_token, x), dim=1)
+
         x = x + self.position_embedding
-        for block in self.transformer_blocks:
-            x = block(x)
 
-        x = x[:, 0]
+        x = self.transformer(x)
+
+        x = x[:, 0]  # CLS token
         x = self.mlp_head(x)
 
         return x

@@ -11,6 +11,12 @@ data/cifar-10-python.tar.gz
 kaggle/raw/
 kaggle/train/
 kaggle/val/
+kaggle/dataset-paddy/
+kaggle/train/
+kaggle/val/
+*.pt
+*.pth
+__pycache__/
 
 
 # General
