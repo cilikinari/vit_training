@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 from dataset import get_dataloader
 from model import VisionTransformer
 
-# ======================
-# CONFIG
-# ======================
+
 config = {
     "batch_size": 32,
     "num_classes": 10,
@@ -18,21 +16,17 @@ config = {
     "embed_dim": 128,
     "transformer_blocks": 4,
     "mlp_nodes": 128,
-    "learning_rate": 3e-5,
-    "epochs": 10,
+    "learning_rate": 0.001,
+    "epochs": 20,
 }
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device:", device)
 
-# ======================
-# DATA
-# ======================
+
 train_loader, val_loader = get_dataloader(config["batch_size"])
 
-# ======================
-# MODEL
-# ======================
+
 model = VisionTransformer(config).to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -43,16 +37,11 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
     T_max=config["epochs"]
 )
 
-# ======================
-# TRACKING
-# ======================
+
 train_losses = []
 val_losses = []
 val_accuracies = []
-
-# ======================
-# TRAIN LOOP
-# ======================
+ 
 for epoch in range(config["epochs"]):
     print(f"\nEpoch [{epoch+1}/{config['epochs']}]")
 
@@ -117,9 +106,7 @@ for epoch in range(config["epochs"]):
     # save best model (simple version)
     torch.save(model.state_dict(), "vit_last.pth")
 
-# ======================
-# PLOT TRAINING
-# ======================
+
 plt.figure(figsize=(10, 4))
 
 plt.subplot(1, 2, 1)
