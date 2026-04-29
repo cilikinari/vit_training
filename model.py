@@ -23,11 +23,11 @@ class VisionTransformer(nn.Module):
         )
 
         # CLS token
-        self.cls_token = nn.Parameter(torch.randn(1, 1, self.embed_dim))
+        self.cls_token = nn.Parameter(torch.randn(1, 1, self.embed_dim) * 0.02)
 
         # Positional embedding
         self.position_embedding = nn.Parameter(
-            torch.randn(1, patch_num + 1, self.embed_dim)
+            torch.randn(1, patch_num + 1, self.embed_dim) * 0.02
         )
 
         # Transformer encoder (simple version)
