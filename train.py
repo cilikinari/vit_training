@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+from collections import Counter
+import os
 
 from dataset import get_dataloader
 from model import VisionTransformer
@@ -16,20 +18,39 @@ config = {
     "embed_dim": 128,
     "transformer_blocks": 4,
     "mlp_nodes": 128,
-    "learning_rate": 0.001,
-    "epochs": 20,
+    "learning_rate": 0.001,  
+    "epochs": 10,               
 }
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device:", device)
 
 
+# ===== LOAD DATA =====
 train_loader, val_loader = get_dataloader(config["batch_size"])
 
 
+# ===== AUTO CLASS WEIGHT =====
+targets = train_loader.dataset.targets
+class_counts = Counter(targets)
+
+counts = [class_counts[i] for i in range(len(class_counts))]
+
+weights = 1.0 / torch.tensor(counts, dtype=torch.float)
+weights = weights / weights.sum()
+
+print("Class counts:", counts)
+print("Class weights:", weights)
+
+
+# ===== MODEL =====
 model = VisionTransformer(config).to(device)
 
-criterion = nn.CrossEntropyLoss()
+if os.path.exists("vit_last.pth"):
+    model.load_state_dict(torch.load("vit_last.pth"))
+    print("🔥 Lanjut dari model sebelumnya!")
+
+criterion = nn.CrossEntropyLoss(weight=weights.to(device))
 optimizer = torch.optim.Adam(model.parameters(), lr=config["learning_rate"])
 
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -38,10 +59,15 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
 )
 
 
+# ===== METRICS =====
 train_losses = []
 val_losses = []
 val_accuracies = []
- 
+
+best_val_loss = float('inf')    
+
+
+# ===== TRAINING LOOP =====
 for epoch in range(config["epochs"]):
     print(f"\nEpoch [{epoch+1}/{config['epochs']}]")
 
@@ -92,10 +118,8 @@ for epoch in range(config["epochs"]):
     val_acc = 100 * correct_val / total_val
     avg_val_loss = total_val_loss / len(val_loader)
 
-    # scheduler step
     scheduler.step()
 
-    # save metrics
     train_losses.append(avg_train_loss)
     val_losses.append(avg_val_loss)
     val_accuracies.append(val_acc)
@@ -103,10 +127,17 @@ for epoch in range(config["epochs"]):
     print(f"Train Loss: {avg_train_loss:.4f} | Train Acc: {train_acc:.2f}%")
     print(f"Val Loss: {avg_val_loss:.4f} | Val Acc: {val_acc:.2f}%")
 
-    # save best model (simple version)
+    # 🔥 SAVE BEST MODEL
+    if avg_val_loss < best_val_loss:
+        best_val_loss = avg_val_loss
+        torch.save(model.state_dict(), "vit_best.pth")
+        print("🔥 Best model updated!")
+
+    # save last model
     torch.save(model.state_dict(), "vit_last.pth")
 
 
+# ===== PLOT =====
 plt.figure(figsize=(10, 4))
 
 plt.subplot(1, 2, 1)
