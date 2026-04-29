@@ -4,7 +4,7 @@ import random
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-source_dir = os.path.join(BASE_DIR, "kaggle", "dataset-paddy")
+source_dir = os.path.join(BASE_DIR, "kaggle", "data", "dataset")
 train_dir = os.path.join(BASE_DIR, "kaggle", "train")
 val_dir = os.path.join(BASE_DIR, "kaggle", "val")
 
@@ -22,6 +22,8 @@ if not os.path.exists(source_dir):
     raise FileNotFoundError(f"Folder tidak ditemukan: {source_dir}")
 
 print("Source dataset:", source_dir)
+
+random.seed(42)  # untuk hasil yang konsisten
 
 # looping tiap class
 for class_name in os.listdir(source_dir):
