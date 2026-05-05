@@ -19,7 +19,7 @@ config = {
     "transformer_blocks": 4,
     "mlp_nodes": 128,
     "learning_rate": 0.001,  
-    "epochs": 10,               
+    "epochs": 15,               
 }
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
