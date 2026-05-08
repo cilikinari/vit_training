@@ -34,3 +34,10 @@ dataset/
 # ======================
 .vscode/
 .DS_Store
+
+# ======================
+# Evaluasi
+# ======================
+evaluate-analysis.txt
+check.py
+*.png
